@@ -1,0 +1,33 @@
+{
+  "name": "@toxicwind/marquee",
+  "version": "1.0.0",
+  "description": "Star-grade GitHub repo maximalizer — audit, remediate, and ship repos that earn stars.",
+  "aliases": [
+    "star-whore",
+    "star whore",
+    "star-grade",
+    "make-it-pop",
+    "polish-repo",
+    "readme-maximal"
+  ],  "type": "module",
+  "bin": {
+    "marquee": "bin/marquee.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./audit": "./src/audit.ts",
+    "./readme": "./src/readme.ts",
+    "./meta": "./src/meta.ts",
+    "./community": "./src/community.ts",
+    "./liveness": "./src/liveness.ts",
+    "./ci": "./src/ci.ts",
+    "./changelog": "./src/changelog.ts",
+    "./ship": "./src/ship.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
