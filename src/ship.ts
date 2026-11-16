@@ -1,5 +1,5 @@
 /**
- * marquee ship — commit + push + verify. Forward-only, main is fine (estate doctrine:
+ * marquee ship — commit + push + verify. Forward-only, main is fine (Pens doctrine:
  * "we are allowed to main"). Never force-push. Uses gh auth for push (PAT w/o workflow
  * scope can't touch .github — surfaced as a clear warning, workaround: gh auth refresh).
  */
