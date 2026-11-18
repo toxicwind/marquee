@@ -97,7 +97,7 @@ export function auditRepo(dir: string): AuditResult {
     id: "p0-demo",
     pri: "P0",
     label: "Demo (GIF/screenshot/asciinema) above the fold",
-    pass: /(\.(gif|png|jpg|jpeg|svg)\)|asciinema|<img|<video|\!\[.*\]\(/i.test(readme.slice(0, 3000)),
+    pass: /(\.(gif|png|jpg|jpeg|svg)[)])|asciinema|<img|<video|\!\[.*\]\(/i.test(readme.slice(0, 3000)),
     hint: "Add a demo GIF, screenshot, or asciinema cast in the first screen of README.",
   });
   push({
