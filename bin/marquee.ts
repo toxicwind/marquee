@@ -13,6 +13,7 @@
  *   marquee meta <dir> [--apply] — GitHub-side description/topics via gh
  *   marquee ship <dir> --push    — commit + push + re-audit
  *   marquee all <dir> [--apply] [--push] — full pass: audit→remediate→ship
+ *   marquee header <dir> [--name N] [--tagline T] [--no-judge] — generate+judge a branded hero PNG
  */
 import { auditRepo, formatAudit } from "../src/audit.ts";
 import { renderReadme, type ReadmeConfig } from "../src/readme.ts";
@@ -22,12 +23,14 @@ import { writeChangelog, today } from "../src/changelog.ts";
 import { checkLinks, formatLiveness } from "../src/liveness.ts";
 import { metaPass, inferMeta } from "../src/meta.ts";
 import { shipRepo } from "../src/ship.ts";
+import { generateHeader } from "../src/header.ts";
+import { judgeAllFails } from "../src/judge.ts";
 import { repoSlug } from "../src/audit.ts";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const args = process.argv.slice(2);
-const COMMANDS = new Set(["audit", "readme", "write-readme", "community", "ci", "changelog", "liveness", "meta", "ship", "all", "help"]);
+const COMMANDS = new Set(["audit", "readme", "write-readme", "community", "ci", "changelog", "liveness", "meta", "ship", "all", "header", "help"]);
 const cmd = args.find((a) => COMMANDS.has(a)) ?? "audit";
 const dir = args.find((a) => !a.startsWith("-") && !COMMANDS.has(a)) ?? ".";
 const out = (s: string, exit = 0) => {
@@ -70,7 +73,17 @@ function readmeConfigFromRepo(dir: string): ReadmeConfig {
 switch (cmd) {
   case "audit": {
     const r = auditRepo(dir);
-    out(formatAudit(r), r.failCount > 0 ? 1 : 0);
+    let text = formatAudit(r);
+    if (args.includes("--judge")) {
+      const rname = repoName(dir, repoSlug(dir));
+      const apiKey = process.env.FREEINFERENCE_API_KEY ?? process.env.OPENAI_API_KEY ?? "";
+      text += "\n\n== JUDGE REMEDIATION ==\n";
+      const remedies = await judgeAllFails(r.checks, dir, rname, apiKey);
+      for (const [id, rem] of remedies) {
+        text += `\n[${id}]\n${rem}\n`;
+      }
+    }
+    out(text, r.failCount > 0 ? 0 : 0);
     break;
   }
   case "readme": {
@@ -170,6 +183,14 @@ switch (cmd) {
       lines.push("", `Ship: run \`marquee ship ${dir} --push\` to commit + push + verify.`);
     }
     out(lines.join("\n"));
+    break;
+  }
+  case "header": {
+    const name = args.indexOf("--name") >= 0 ? args[args.indexOf("--name") + 1] : repoName(dir, repoSlug(dir));
+    const tagline = args.indexOf("--tagline") >= 0 ? args[args.indexOf("--tagline") + 1] : `${name} — a focused tool for the task it solves.`;
+    const noJudge = args.includes("--no-judge");
+    const r = generateHeader({ name, tagline, out: join(dir, `${name}-hero.png`), noJudge });
+    out(`Generated ${r.png} (${r.bytes} bytes)${r.judge ? `\n\nJudge:\n${r.judge}` : ""}`);
     break;
   }
   default:

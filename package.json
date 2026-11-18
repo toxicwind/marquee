@@ -9,7 +9,8 @@
     "make-it-pop",
     "polish-repo",
     "readme-maximal"
-  ],  "type": "module",
+  ],
+  "type": "module",
   "bin": {
     "marquee": "bin/marquee.ts"
   },
@@ -22,12 +23,14 @@
     "./liveness": "./src/liveness.ts",
     "./ci": "./src/ci.ts",
     "./changelog": "./src/changelog.ts",
-    "./ship": "./src/ship.ts"
+    "./ship": "./src/ship.ts",
+    "./remediate": "./src/remediate.ts"
   },
   "scripts": {
     "test": "bun test"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^26.6.6"
   }
 }
