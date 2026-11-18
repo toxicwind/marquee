@@ -1,5 +1,5 @@
 {
-  "name": "@toxicwind/marquee",
+  "name": "@geode/marquee",
   "version": "1.0.0",
   "description": "Star-grade GitHub repo maximalizer — audit, remediate, and ship repos that earn stars.",
   "aliases": [
