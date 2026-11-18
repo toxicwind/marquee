@@ -14,10 +14,10 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 /** The estate's freeinference deepseek judge model. */
-export function judgeModel(): Model<"openai-completions"> {
+export function judgeModel(id = "deepseek-v4-flash"): Model<"openai-completions"> {
 	return buildModel({
-		id: "deepseek-v4-flash",
-		name: "deepseek-v4-flash",
+		id,
+		name: id,
 		api: "openai-completions",
 		provider: "freeinference",
 		baseUrl: "https://freeinference.org/v1",
@@ -28,6 +28,9 @@ export function judgeModel(): Model<"openai-completions"> {
 		maxTokens: 4096,
 	});
 }
+
+/** Fallback chain: try each model in order until one completes. */
+const JUDGE_FALLBACK_MODELS = ["deepseek-v4-flash", "qwen3.6-35b"];
 
 /** Build a judge prompt for a failing check, including the actual repo context. */
 export function judgePrompt(check: CheckResult, dir: string, repoName: string): string {
@@ -55,19 +58,26 @@ export function judgePrompt(check: CheckResult, dir: string, repoName: string): 
 }
 
 /**
- * Judge a single failing check with the LLM. Returns the judge's remediation text.
+ * Judge a single failing check with the LLM, falling back across models.
+ * Returns the judge's remediation text.
  */
 export async function judgeCheck(check: CheckResult, dir: string, repoName: string, apiKey: string): Promise<string> {
-	const model = judgeModel();
-	const backend = chatTextBackend(model, { apiKey });
-	const completion = await backend.complete(
-		{
-			system: "You are a terse, expert repo grader. Give only the remediation.",
-			user: judgePrompt(check, dir, repoName),
-		},
-		{ signal: undefined },
-	);
-	return completion.text?.trim() ?? "(judge returned no text)";
+	const prompt = judgePrompt(check, dir, repoName);
+	for (const modelId of JUDGE_FALLBACK_MODELS) {
+		try {
+			const model = judgeModel(modelId);
+			const backend = chatTextBackend(model, { apiKey });
+			const completion = await backend.complete(
+				{ system: "You are a terse, expert repo grader. Give only the remediation.", user: prompt },
+				{ signal: undefined },
+			);
+			const text = completion.text?.trim();
+			if (text) return text;
+		} catch (e) {
+			// fall through to the next model
+		}
+	}
+	return "(all judge models failed)";
 }
 
 /**
