@@ -139,9 +139,9 @@ export function auditRepo(dir: string): AuditResult {
     hint: "Add CHANGELOG.md; log every release.",
   });
 
-  const remoteRepo = slug ? ghJson(["repo", "view", slug, "--json", "description,topics,defaultBranchRef,hasIssuesEnabled"]) : null;
+  const remoteRepo = slug ? ghJson(["repo", "view", slug, "--json", "description,repositoryTopics,defaultBranchRef,hasIssuesEnabled"]) : null;
   const description = typeof remoteRepo?.description === "string" ? remoteRepo.description : "";
-  const topics = Array.isArray(remoteRepo?.topics) ? (remoteRepo.topics as string[]) : [];
+  const topics = Array.isArray(remoteRepo?.repositoryTopics) ? (remoteRepo.repositoryTopics as Array<{name?: string} | string>).map(t => typeof t === "string" ? t : (t.name ?? "")) : [];
   const defaultBranch =
     typeof (remoteRepo?.defaultBranchRef as { name?: string } | undefined)?.name === "string"
       ? (remoteRepo.defaultBranchRef as { name: string }).name
